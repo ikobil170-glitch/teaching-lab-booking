@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Teaching Lab — Workshop EDU720 Microteaching</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; min-height: 100vh; }
+
+  .page-header {
+    background: #fff;
+    border-bottom: 3px solid #2e7d32;
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .page-header img { 
+    height: 52px;
+    background: white;
+    padding: 4px;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+  .page-header-text h1 { font-size: 22px; font-weight: 700; color: #1a2a4a; }
+  .page-header-text p { font-size: 13px; color: #666; margin-top: 2px; }
+
+  .container { max-width: 900px; margin: 32px auto; padding: 0 16px; }
+
+  .notice-box {
+    background: #fff8e1;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 14px;
+    color: #7c5900;
+    line-height: 1.6;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 14px;
+  }
+
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .slot-card {
+    background: #fff;
+    border: 2px solid #e0e4ea;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+  }
+  .slot-card:hover:not(.full) { border-color: #2e7d32; box-shadow: 0 4px 16px rgba(46,125,50,0.12); transform: translateY(-2px); }
+  .slot-card.selected { border-color: #2e7d32; background: #e8f5e9; box-shadow: 0 4px 16px rgba(46,125,50,0.18); }
+  .slot-card.full { opacity: 0.55; cursor: not-allowed; background: #f8f8f8; }
+
+  .slot-day-label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #2e7d32; margin-bottom: 5px; }
+  .slot-time { font-size: 17px; font-weight: 700; color: #1a2a4a; margin-bottom: 4px; }
+  .slot-note { font-size: 12px; color: #777; margin-bottom: 14px; }
+
+  .progress-wrap { background: #eaeaea; border-radius: 6px; height: 7px; margin-bottom: 7px; overflow: hidden; }
+  .progress-bar { height: 7px; border-radius: 6px; background: #2e7d32; transition: width 0.4s ease; }
+  .progress-bar.full { background: #c62828; }
+
+  .slot-count-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #888; }
+  .badge-full { background: #ffebee; color: #c62828; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+  .badge-open { background: #e8f5e9; color: #2e7d32; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+
+  .checkmark { position: absolute; top: 14px; right: 14px; width: 22px; height: 22px; background: #2e7d32; border-radius: 50%; display: none; align-items: center; justify-content: center; }
+  .checkmark svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 2.5; }
+  .slot-card.selected .checkmark { display: flex; }
+
+  .form-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1.5px solid #e0e4ea;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .form-card h2 { font-size: 17px; font-weight: 700; color: #1a2a4a; margin-bottom: 18px; }
+
+  .selected-info {
+    background: #e8f5e9;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #1a2a4a;
+    font-weight: 600;
+    margin-bottom: 20px;
+    border-left: 3px solid #2e7d32;
+  }
+
+  .form-row { margin-bottom: 16px; }
+  .form-row label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px; }
+  .form-row input {
+    width: 100%;
+    padding: 11px 14px;
+    font-size: 15px;
+    border: 1.5px solid #d0d5e0;
+    border-radius: 8px;
+    background: #fafbfc;
+    color: #1a2a4a;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .form-row input:focus { border-color: #2e7d32; background: #fff; box-shadow: 0 0 0 3px rgba(46,125,50,0.1); }
+  .err { font-size: 12px; color: #c62828; margin-top: 4px; min-height: 16px; }
+
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.02em;
+  }
+  .btn-submit:hover:not(:disabled) { background: #1b5e20; transform: translateY(-1px); }
+  .btn-submit:disabled { background: #a5d6a7; cursor: not-allowed; }
+
+  .success-wrap {
+    background: #fff;
+    border-radius: 14px;
+    padding: 48px 32px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+  .success-icon { font-size: 56px; margin-bottom: 16px; }
+  .success-wrap h2 { font-size: 24px; font-weight: 700; color: #1a2a4a; margin-bottom: 10px; }
+  .success-wrap p { font-size: 15px; color: #555; line-height: 1.6; }
+
+  .loading-spinner {
+    display: inline-block; width: 18px; height: 18px;
+    border: 2px solid #ccc; border-top-color: #2e7d32;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-overlay {
+    text-align: center; padding: 40px 20px;
+    font-size: 15px; color: #888;
+  }
+
+  .hidden { display: none !important; }
+  
+  #tab-book {
+    display: block;
+  }
+
+  /* Color-coded slot cards by day/time */
+  .slot-card.thu-am { border-color: #1976d2; }
+  .slot-card.thu-am:hover:not(.full) { border-color: #1565c0; box-shadow: 0 4px 16px rgba(25,118,210,0.15); }
+  .slot-card.thu-am.selected { border-color: #1976d2; background: #e3f2fd; box-shadow: 0 4px 16px rgba(25,118,210,0.20); }
+  .slot-card.thu-am .slot-day-label { color: #1976d2; }
+  .slot-card.thu-am .progress-bar { background: #1976d2; }
+  .slot-card.thu-am .badge-open { background: #e3f2fd; color: #1976d2; }
+
+  .slot-card.thu-pm { border-color: #f57c00; }
+  .slot-card.thu-pm:hover:not(.full) { border-color: #ef6c00; box-shadow: 0 4px 16px rgba(245,124,0,0.15); }
+  .slot-card.thu-pm.selected { border-color: #f57c00; background: #fff3e0; box-shadow: 0 4px 16px rgba(245,124,0,0.20); }
+  .slot-card.thu-pm .slot-day-label { color: #f57c00; }
+  .slot-card.thu-pm .progress-bar { background: #f57c00; }
+  .slot-card.thu-pm .badge-open { background: #fff3e0; color: #f57c00; }
+
+  .slot-card.fri-am { border-color: #388e3c; }
+  .slot-card.fri-am:hover:not(.full) { border-color: #2e7d32; box-shadow: 0 4px 16px rgba(56,142,60,0.15); }
+  .slot-card.fri-am.selected { border-color: #388e3c; background: #e8f5e9; box-shadow: 0 4px 16px rgba(56,142,60,0.20); }
+  .slot-card.fri-am .slot-day-label { color: #388e3c; }
+  .slot-card.fri-am .progress-bar { background: #388e3c; }
+  .slot-card.fri-am .badge-open { background: #e8f5e9; color: #388e3c; }
+
+  .slot-card.fri-pm { border-color: #7b1fa2; }
+  .slot-card.fri-pm:hover:not(.full) { border-color: #6a1b9a; box-shadow: 0 4px 16px rgba(123,31,162,0.15); }
+  .slot-card.fri-pm.selected { border-color: #7b1fa2; background: #f3e5f5; box-shadow: 0 4px 16px rgba(123,31,162,0.20); }
+  .slot-card.fri-pm .slot-day-label { color: #7b1fa2; }
+  .slot-card.fri-pm .progress-bar { background: #7b1fa2; }
+  .slot-card.fri-pm .badge-open { background: #f3e5f5; color: #7b1fa2; }
+
+  /* Day separator */
+  .day-separator {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 4px 0;
+    padding-top: 8px;
+  }
+  .day-separator .sep-line {
+    flex: 1;
+    height: 2px;
+    border-radius: 1px;
+  }
+  .day-separator .sep-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .day-separator.thu .sep-line { background: linear-gradient(90deg, #1976d2, #f57c00); }
+  .day-separator.thu .sep-label { background: #e8eaf6; color: #3949ab; }
+  .day-separator.fri .sep-line { background: linear-gradient(90deg, #388e3c, #7b1fa2); }
+  .day-separator.fri .sep-label { background: #e8f5e9; color: #2e7d32; }
+
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAAABrCAYAAACrF/z2AAABCGlDQ1BJQ0MgUHJvZmlsZQAAeJxjYGA8wQAELAYMDLl5JUVB7k4KEZFRCuwPGBiBEAwSk4sLGHADoKpv1yBqL+viUYcLcKakFicD6Q9ArFIEtBxopAiQLZIOYWuA2EkQtg2IXV5SUAJkB4DYRSFBzkB2CpCtkY7ETkJiJxcUgdT3ANk2uTmlyQh3M/Ck5oUGA2kOIJZhKGYIYnBncAL5H6IkfxEDg8VXBgbmCQixpJkMDNtbGRgkbiHEVBYwMPC3MDBsO48QQ4RJQWJRIliIBYiZ0tIYGD4tZ2DgjWRgEL7AwMAVDQsIHG5TALvNnSEfCNMZchhSgSKeDHkMyQx6QJYRgwGDIYMZAKbWPz9HbOBQAABAnElEQVR42u29eZwkW1nn/T0RkftaWfvW1dX7ejcuqwygCDiCK/ryGUVlBkUFXgQVGJFNxAVkUFCRcRn3UUHFFx0U9QURkcuFC9y+vW9V1V37mrsacc78EZFZmVVZ1VW9VrXn+/nUp7syoyLOEnHOL57znOcRgEKj0Wg0Go1Gc9swdBNoNBqNRqPRaIGl0Wg0Go1GowWWRqPRaDQajRZYGo1Go9FoNFpgaTQajUaj0Wi0wNJoNBqNRqPRAkuj0Wg0Go1GCyyNRqPRaDQa7QpUIiKi0Wg0dxJKKf6/978fQwj81io5KSLCcRyi0WjGsiyUUiwuLmIYBr7v81JLLzEyMsKhQ4cIBoPKcZym+49GIuTzBTqTSTzPJZfLMTc3RzKZZGhoiFAoRIudWWyWaDTKzs4OOzs7NBoN8vk8uVyOcrlMvV5naWmJ2dlZbt5wi8/cehN/9PQfEQwGWV5e5plnnuHOO+/k7rvvZnR0lDvvvJODhw+yt7vHH//xH/O+j32M/v7+w/MbUVVVPPLII5TLZezWUUX27FHmdBqNRvOD4d3veR+2YfDxf3w/rVZLPXLPPZVPfvKTlbe+9a2VU6dOVT7xiU9Uvvud71T+6Z/+qfKNb3yjMjMzU/n2t79defihh47M/fEf/3HFMAzVaDisPvOZz1ROnz5defWrX135z//5P1cGBwcrV1999RHfrjJgR/N/k81mK4VCQW1sbFQsy1LtdlvV63V1+vTpyqlTp9RHP/rRo/m+X7Esy1Ke51VOnjxZ+fjHP145cuRI5Ytf/GJleXm5cvPNN1e+9KUvVX7/93+/8tvf/nblE5/4ROU//uM/Kn/0R39Uefvb365OnjxZ+fjHP145cuRI5Ytf/GJleXm5opTq/MVf/EXl9OnTlVe/+tWV22+/Xf3xH/9x5Ysvvlj5p//0n1b+5m/+pnLnnXdW7rzzTuXPf/7PlT/7sz+r/NVf/VXljjvuqHzyk5+sPPDAA5V//+//feUP/uAPKv/xH/+hPvjBD1ZGR0crY2Njlde97nWVm266qXLTTTdVTp48WXnjG99YOfvzP1/5xV/8RaWvr6/ypje9qfKhD32o8rlPfqryL3/pl5Sf/umfrvzyl/5V5Wd+5mcqf/mXf1m5du3ayvT09RUhxHfp779UX/va1yqPPvpoxXEcVS6XK1/84hcrX/jCFyoPP/xw5bHHHqt8+ctfrvzFX/xF5W/+5m8qjz/+eOXZZ5+tPPvss5Vnnnmmcvvtt1cefPDBylNPPVX5xjf+pfLZz36u8tWvfqlyyy23VHp6eip33313ZW5urvJHP/RDlQ996EOVvr6+CqCUUgo6OjqUJ554QimFGhwcrJw6daqyurrqK6VUT0+PGh0drRw4cKByxRVXVObm5ioHDhyo/J//83+qBw4cqLz//e9XpqenK48++qiqlFI9PT2VKWUtHXbvfvfO5OzJY4Ly+aR+WqFUq9VaGhyc8hVFUfxGXtOqqWqxj3kXW6y9E1qyqF1Xb8WRdHQvTWFt0jnJWHo+KKQNa8/h3KG3J8JVx/M9/7z82Pnnlxm2K9cKcqIq3qg/qqBvvfU6z6lnC0a1a6zCqdzFJqLBeCTfn2S+TOdUPXMEk0fTg0cSamemA0nQvBBp5d6Y4fRo7Xl1dHl2d0aKbNwEZqzEn7xSVjb/C4zzBvPHFiglKPVKsJNYR3m3JSn2jqyEGrgJEqHaMQbM2lDvOMFLjl2tQPOIbVpE6L9vflwm9T16e1hjYKvMqWC4f0DVqXjl6tY1fK/Ebi0rBaDJzPP0S0M+t73dSCMvBv/y1nWmK7jNWMEDWfqx6QLmgvBqLOXhzNvWtqIiFdIXfvPJvhI3plJ8l7J8fNqBZuv6Q6GwJ6l5Bf6eHWP9Dh5W5mMEJ0XfqPk2+oJHlRmB/OqJzO2mLKUBCfOXx3GXFV5bYJFNrXo1W94Qd6eEMOQ7lXvb0CqnVa3gZKGBUhZ5JCcExdKU/PqL0vLuBwJhjYGVAFMBPLLu3lJVBBxMfXZmsmSb2x8qzZZflJNVnsoKT9rKhKDsLpXhREhXrYkgdpRLp0T2m5d8KskTGlX/TG3hjSQ5c9eMPDTWkiKW8xCGFt5Gd5I7lqKU7lYw3b+CqjMrYj5x/XFLDe7j8j6Ct3l7Bwd0EGV9RlqTvfTLHRLOaB5OxqBGBP+x9qhW3SSVL5gGwgBkJJpb9nYAJfpnGRXWZJfEVMK3t8WKLslSR7blCy/2qlL7qw5NhYzDfO+Y2G7vIGZX2mwBD/Q4RDv8pXGnxV6+7N4w+HZDT+tqBG7Pr4d9/c6rmJLHZUwBFsrCIEhBwdABfqYDMeVu1AoH5ktLYCGR3bNeLdUhDuNfBfvkj5HEH7oYb3RYi5Lm5c2xMwHLHQkx7n5s3AEBKfnGqPnCvmXQ/FwEMDKz1yXvBH6e5mHtXzU3Jmf1HNfVe2QaHxl0i0YnN1vM8+t3w5w4vWnnnmvuJt1mCPl8VdTpLVHRQZCCX4qDwKvW0Jk0vXQ3v/flO5S0GLLBXWP/qvEJPDnvj1fJoVk/L/Q/J8SYCGbH8L5yqBvQdAjSJZaGSvIVH2KqBFD/Uw7P8TK2m7y3nz+wPFyPEsG6t1ujb25uP0V52cJWcvb4MzfPU3pNVy1ugzj+QKGNVnCZQPOy3x5WaFfnWKvjeLSh29aaBRMEJCaWQwO/QNVPB6sZGZ5G8Ln+c81hKs3QVmrOKF5bR0VaVvE6xZ3OJKzSQn5YKoJv6n+EhcN2A1emZ4u/RuP+x3flPf5xDR8T6IHq2VHg4q+UBVNt1vgU/KQ6H16qhVL3Bj1v7hfvj5H+vjJv/R8UJ7Fxn4b4j6pE8kKW1v+h2Td+pCxpG5pG5oG5qm4dGDcMUKKCJ9wD5oG5oG5qm4dGGcMU3KCJqNBoNBqNRqMFlkaj0Wg0Go0WWBqNRqPRaDRaYGk0Go1Go9FogaXRaDQajUaj0QJLo9FoNBqNRgsshmGSy+VIp9Nks1ny+TyVSoXl5WVeeOEFarUahmFQqVTY3NxkYWGBbDZLPp9nYWGBWrVKrVajVCohpeSpp56iVqtRr9epl0r8+Z//OQsLC5RKJep1H5VOPvbII6zPz7G+vs7s7CyzqzPUa1WKpRK1Wo1KpcLGxgZPPPEEr33ta7nvv/wXnvz+K+QyGZ49e5a1tTXef+89bG5tUa1WxzdbLBb5+OOP8+HhYa677jpmZ2epl0o8/fTT1Ku1Fj6jvSdSqRRPPvkkr33ta/nBq66Rv/vKV0gnk6xsbvL5z30Ov1ajWCzSaDQYHR0lnU6TTqe5++67+ca3v8WT33+F15RkMsnLL3sZnzl8AClEMAECAe/+3nv4B//6XxHh8OuD334LmCEqpSqveMUraLVaTExMUK/XSafT3HrrrXz1q1/lT374tZCqUa/XcV2XhYUFXn/99Tz15JPkMhlGRkbY3Nykp6dHPXf+PN8vvQJoVPJgabOF9ytf+Qr//+ysKvR0SwMHfPe73/uSq6++Wq3Pz6tPfvKT6j/9p/9EqVRSa2trqlardR2v02nxvve9T923cUNleXlZzc3Nqc3NTfXOd75Tnf/6rXp/YUF9/etfV3feeady3Zb65JNPqlqtpr761a+qer1eVEpVXvva16pPfupTyg2EQqGQOv/DV6i1xVl1/sWv5yVaLbvVVovK9Px/Vq72NNPF8pzfBc/f0SfUGwi6l6E8E6ky5FDpqDNWa9Q/+Nf+xQNDQ2pfD6vPvHJT6jTp0+r5eVltbm5qapKqenpaXX77berpaUltbi4qKpKqUKhoLa3t9WJEyfU17/+dXX27Fl16tQptbCwoObm5tSJEyfU888/ry5evKi+//3vq/Pnz6tKpVJVSlVeeuml6re++FxVKVXlG9/4hvr/+P/Rfvdh6f/6C5yp5DVz/D+UpxE7o5bfFePd2LvhzEj1vjHf8pVH1Fm38c1uF28QYHqV/7e7G0t5u32cIKBV0yqq0CryLLVfeFr0J1GgPvDPqBVPY75qqP9b9EajvnChGv9/iLs+8f1T5gzXPTN4nUqHYXEXjkMb8JyJ1LRnIjUKzLq5Ck4bxEjHZK+YrZBvG3qCBXvmKCJxZ5L4HgW+WvnM/J5F7FfECfvPP83oXPKrzHJJ6sLdqfY2x0mJwLpfxSJvfN3UzNuX1mJQw8u9c9p4qr2n0xXEVpvuLo7P0HWU3TbS6tGVqf7LZuHX9EiJ5n1hb8DKaKZcBdCWYN5hPHNaYjc/hBuQF/Q7hTxJ/NaVmBJ3HgWbH/6Cqouf0/XUxhHJJ+LjKzQKPf7I5WjHBjnTakTJ4/iNUXgYNIcO6XfDp1igA6wJX9vHdWQ9hvNRhCDPYsKlKEJAM0GbRe7rlvEe3W8YPu6VV0P9vScC9w5Vk2x+eEvBgaR70IXCwkA3f9LkJEj1XeAqK1rOx/d2LNRr9jOGkRLWHsCZrC5IZfyuWl3jAXStvKHXJaHFvEBKZ3K2L8c8d38rLqKxN+FnCSjzKsQKJrvzN9z6hV1BJTJY2gKlSh7T/kT+9xGEJXPlEqKJZhXOCl4sNPvQCEgcf9VsVJa/u3ygP3iy5E6l1zTEcJlgzJh60cLp0jfXpR3L9EktWzT5KM8U27Q1CUlslRh7VCTKl0ubkPCB+o6J0FHnHE5lh7g3I4bZrKJ/J9kSKxQC0xLHCpULu3HFxu0Q8R3xB2PnWjrAGOPdFhKi9C3y6d9F12EAzHEcZcRyPiVVakFpKfXNhO1iNjJNyp4rKRQ2v/LX+kUJcVKXqr6Pc9jzn9xAHQRgRyKZdxbY6wZvw/pNrNvWHCqVfxYcYHDKzn3LoKKbXDrmLBGBMKsKBVNNB+lz48qHE8zzj0hXz0K26+g0zAk9PXgpPrVe1HaNZH92zKxrmPPjXe4ciBzOaK/vLSoG2tFLqW2Q6oZrQKb+RKnNpLQiXxvAZxh2lPvOI0Y9O/pU5ktR6TE6qTqMa/H2QBbYj/vVG4DKdMqsKTtdD0OOF8f+8c4PiP1vV8s6F0P72u6/Ds3UWfKw5X5+wJZ2T9hRDT2F9llWF3d+P5xPiP2TXGrKpCqEjKmV7yw+t7vFnC/i8kPnMpEKvSVLDOJEI1ZZQWI+/c6REDEp9cPvLGPzvfChZ0aJLBqGYmX+WK21m7Xgd0WuKc/hLvhAZ0eCcPGPNl2LNTuq1XoKJhN//v8v9R8/LhPrW6MhVcq3kLAGKMvQ1K6M3Gp5F9aJ/5R6Ct0llNsoXbM0/4qNO92p7NrIrNFEVxLCRi/3iUNdGM+Xp5hv3IVGsgOlvtBQhp+LPfU1WJ9wFHTtfvJ5lKcmqN2kF/UkdklbhA1+SfBPvEIKBJhCCWa5+J4pD3lccsoF0cVCRrBwzKcS1RG4c/LNXNJfK2XJ/G36emkJsP3nULI1jDp5iFGHlkZsM9l/TQMx7TLfWtWJvJgrLZnG/7FfjvxaT9tRLbXJiAy/Z5g6dU8C/8IYzC9UvLW8+7u9gYvbqhjL4rn9X+BF/J0WO1IVy7cJzrZJ8VqL2F7S1v+QGu2bSLXcfnKfOJqC7xQpRoqpYxLgBx3K5gvvVvQwdEddHvGfvJ5+Y6t7sQZxLpuGYMPl4+gHgIrPDpO8KiMvVJCb2ov96Q+k0uDvFZ+rPcr5kfkQY3G7YV40L8QCJPWaR+s8sBZG+YvnN/V0nnW/3RoXK5a3Q15zMdOKMh7tCvP4p9yfvs8dIxWXQ1oKB8nzI3vQ0p6LONfR8ScqQN3F5hW9wVuTHCCQtQVgL9D3R55hNVrFfOXNMrEVWZv+IJ8p5I1rlB+eFqOGdwGZxX1l3E6nC8D6CX3Zl+YjrM2d8nJoO8VX/u/gDSgL/7fQEyNqJkj5Hl6vcNbC/rM7fZI55qNl5bzfaJxkMlx3AeV+S3Ypkc1Z0HYQBL0vcqYUSVEknDaFwKv0aw7qMjt8VjrZM1s+Dv4/vK/C7qBKXvfJMbZf+ek6bNT+7bVfHIzIWxn1u5qVNfT+6H02nrlbjd4Z2h7I3ZjBe0/3IY6Rc7V1Gk0rW6e2GsyBNON3kLs9P8YP8Yc8w5x3x36GNGWqFSB8TYC+QNRx6m0bGgqOlPpfCq6tBhDvzRVZlFf0XQBXFB7tN+zJi/r7hhDVl7Pk9qfN8PvQkMT7Sra8qy0V8+rWxdZo7MesuB7lvSrJ30rOlDWxUJcAKADn8lFXkVHFYVg0q8iT8Pf/gM2W+LqLGktFGO4CQQ6j9xJQvVKBXLVW9H8h3qp2qEZs/SLcJ4tJbwT3K4ZC6chM9L+jn6lJiE8vBbYrYnhbX0ZUa3h5dJQm7Kzh52m3Kj4+1QS7kYWMZLRVgZwkpqQZQYb2S9c8VKXVhOqkdEZAQBNF2Sw8Z4HE2qCVfJ0QZfVfhNtgqLXLsw9MJDYKvPyFVHkDXYLJD1JLDLwvnLqVLNNYr73u1V2DVZ2jZFRNYsW3e9Rf8C6KoJ2Vp6dB+bfBjBYW2hKd4fPh/p2sUIQrGqCGcgJGbnRGN0u46w8ToxJ8q0+9a+2Ky0+nAIxZTx3mVvOMVAn7E5FgD3ExxSBgQVGqHR7RM31N6E0e3Qq7sXzYJOOJGMxjV34/MKLdI6J0oOvINBYv18wdBx0pVgkXM7K3KpnX7u45EPZZ7bIajSIcFSh5BnfE3VHN5s6cZzwPnfJFAr3qm0F5R/VwVczxPQZWWCDuX3rXIkR3vCQcJPjvRhNdF4QMh1XcaXzVy7fKmHPaslPl6CKQSL5xn7CKh2m9b7LZh3U5WzLxZCvBu5/0VfyEdKe2A3sRtj1xZs6KPvs4ydT46hqxh4xm0Q+YGdsJhJcJj8AJDAU9hPIILLgB1fT8q/tZBOJKXLFBPuXPHiqPuqvXTNnNTDDnPqRbnEz2RZzRPPwsFNvVzH2x9pXM8zt3pPgSP+TKkHWVFVXvL9iKvtDVAJLgqfUjsn8tQJdzq+7MUuhRAkqvzLGmBX1EM6S2yNrLDyQu5kCvvE3vMLTM7tHr1dkJEy+2wj0VnbpfpPPvUpD3hfjgQxvBXKdTH2TTZZCHUVhV3MHqaGRJBvgUDTZM1QFnpSx2RQlAX6bqjgISmq8dGXJfM2iMgPXJGH5zrfxGLXS7nqFIUIQ4x/1U61w5D9LNSKx+xBQ4P4ELpYDjPvjfWvmJDj2cV1ue8ryVTBxqLMHJKwLVPCUVGrvMHpf0KDH1X7R2s7j2w+LL+/Q8KR2JhME3XcLLZr2xKy5eMSzz8zR3hV3sYwwhTz+3cS3Ai1yEm7jlCq2vDTqOMGvGEgvGmOvHFVvVeHLLKn/nCwi5qJlLp+vCxB/5emSz72PvqV1ksqPa2bOHfJb0gIVFNyKN3PZc2qY8VJGkW4E+L7g8FP6vK5HWG3IqtTuAHnPbvfqc1rqUZQUfTQqD2mjD9kT82i8Hf46OMEbnxPfO7+Vs/SWZhHvQRfQR8Vkb+8QYo7jFQXXN+aY+7iKGXJm0qcxlMT5fI5M3yxeP39hKqP6SH9qMVRd5u7hb1Fb7llr9BrVUxmHXLWWXJHcHe8YyNJ1LE8f2CrE3o7SBcl8wZdlrgBsm8NjdLOxwLYPG3/Trvqa0V4oJZEy0KW3Y3YdN/VIqQrPfvt5lPQ02Wo/wFyC8NlKLjTt8S+VyU+9Dqp0oPSl6fDKrT/u3vYKFN9O9cz5rmhwYp7n9Gg2l9xT+K3ykPKLzYgGZx3gOKW6BTVE7sU9q1uBFaL8SPqLmLZxON2dKLyNJb3dVbVafFVHKJpVdIBNcDlDGqSc7OZhb+E6JOJOh4vWbVwEJ90l9lvBKx2xKsXLCZtXLXe1vdEW+SvWvXLHZ6Mc2YqhjfB3M7aEk3wBYGh3VxNaOHgx/6TmNH2Fn4rBrPrQN0ePiElOPmCEp9Yd7Jqp7xcjUn8VTR7b/aXfKC+GhfHh/7pBJ0TTsplXAUHmKRf5oVcbG4Jv7H+KH2y9/oxG4zf4dZ7ybJb8YzqKG16ZKl/3gGzVf5sBYyUn2m13YH7oE/hjPXs9fHD5Ou+N3W/cpvhx/6jh1UO+VQj/m9yS8TWUT3oCz1Tm+YH4QLvPBYZmKjlHw9OthqVMR8OW/DstLPKwYsGOtFN+xvBvgrtL7/z0MqJp05X8T4H3CtbL9C+hDTWFzKm+YZjLO2P3c8V/qg1R/wjLbfL9iI37/fIGE5C+gZp4aWP/DuqGh3i9T9PZfXLKvT0xVNJLKPYJcsQ6SZ01F4Eq/ajL8kR6PwCqj4DvKo6HPU8fFEYXp8E==" alt="UM6P ISE Logo" />
+  <div class="page-header-text">
+    <h1>The Teaching Lab — Workshop EDU720 Microteaching</h1>
+    <p>EDU720 &nbsp;·&nbsp; Benguerir Campus &nbsp;·&nbsp; In-Person Workshop</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="notice-box">
+    ⚠️ <strong>Important:</strong> Each student must sign up <strong>once only</strong>. Choose your preferred session — slots are first-come, first-served and close automatically once full (24 places per session, with 3 parallel sessions of 8 students each).
+  </div>
+
+  <div id="tab-book">
+    <div id="loading-slots" class="loading-overlay">
+      <span class="loading-spinner"></span> Loading availability...
+    </div>
+
+    <div id="step-slots" class="hidden">
+      <p class="section-title">Step 1 — Choose your session</p>
+      <div class="slots-grid" id="slots-grid"></div>
+    </div>
+
+    <div id="booking-form" class="form-card hidden">
+      <h2>Step 2 — Enter your details</h2>
+      <div class="selected-info" id="selected-info-display"></div>
+      <div class="form-row">
+        <label for="group-name">Full name</label>
+        <input type="text" id="group-name" placeholder="e.g. Mohamed El Batal" autocomplete="off" />
+        <div class="err" id="err-group"></div>
+      </div>
+      <div class="form-row">
+        <label for="group-email">Contact email</label>
+        <input type="email" id="group-email" placeholder="your.email@um6p.ma" autocomplete="off" />
+        <div class="err" id="err-email"></div>
+      </div>
+      <button class="btn-submit" id="submit-btn" onclick="submitBooking()">Confirm my booking</button>
+    </div>
+
+    <div id="success-view" class="success-wrap hidden">
+      <div class="success-icon">🎉</div>
+      <h2>Booking confirmed!</h2>
+      <p id="success-msg"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://qwtwdiauteyghrrxsflp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3dHdkaWF1dGV5Z2hycnhzZmxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzAzMjMsImV4cCI6MjA5Njc0NjMyM30.9yi5_6UFX_voyO__T1WfoIWj_vYmcbtJF-VJQOi16kc';
+
+const SLOTS = [
+  { id: 'thu-am-1',  day: 'Thursday 9 July', time: '10:00 am – 12:00 pm', note: 'Group 1', max: 8 },
+  { id: 'thu-am-2',  day: 'Thursday 9 July', time: '10:00 am – 12:00 pm', note: 'Group 2', max: 8 },
+  { id: 'thu-am-3',  day: 'Thursday 9 July', time: '10:00 am – 12:00 pm', note: 'Group 3', max: 8 },
+  { id: 'thu-pm-1',  day: 'Thursday 9 July', time: '2:00 pm – 4:00 pm', note: 'Group 1', max: 8 },
+  { id: 'thu-pm-2',  day: 'Thursday 9 July', time: '2:00 pm – 4:00 pm', note: 'Group 2', max: 8 },
+  { id: 'thu-pm-3',  day: 'Thursday 9 July', time: '2:00 pm – 4:00 pm', note: 'Group 3', max: 8 },
+  { id: 'fri-am-1',  day: 'Friday 10 July', time: '10:00 am – 12:00 pm', note: 'Group 1', max: 8 },
+  { id: 'fri-am-2',  day: 'Friday 10 July', time: '10:00 am – 12:00 pm', note: 'Group 2', max: 8 },
+  { id: 'fri-am-3',  day: 'Friday 10 July', time: '10:00 am – 12:00 pm', note: 'Group 3', max: 8 },
+  { id: 'fri-pm-1',  day: 'Friday 10 July', time: '2:00 pm – 4:00 pm', note: 'Group 1', max: 8 },
+  { id: 'fri-pm-2',  day: 'Friday 10 July', time: '2:00 pm – 4:00 pm', note: 'Group 2', max: 8 },
+  { id: 'fri-pm-3',  day: 'Friday 10 July', time: '2:00 pm – 4:00 pm', note: 'Group 3', max: 8 },
+];
+
+let counts = {};
+let selectedSlot = null;
+
+// Initialize counts for all slots
+SLOTS.forEach(s => { counts[s.id] = 0; });
+
+async function sbFetch(path, options = {}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  return res.json().catch(() => null);
+}
+
+async function loadCounts() {
+  const data = await sbFetch('/rest/v1/bookings_microteaching?select=slot_id');
+  SLOTS.forEach(s => { counts[s.id] = 0; });
+  if (data) data.forEach(r => { if (counts[r.slot_id] !== undefined) counts[r.slot_id]++; });
+}
+
+async function init() {
+  try {
+    await loadCounts();
+  } catch(e) {
+    console.error('Failed to load counts', e);
+  }
+  document.getElementById('loading-slots').classList.add('hidden');
+  document.getElementById('step-slots').classList.remove('hidden');
+  renderSlots();
+}
+
+function renderSlots() {
+  const grid = document.getElementById('slots-grid');
+  grid.innerHTML = '';
+  let lastDay = '';
+  SLOTS.forEach(slot => {
+    // Insert day separator when day changes
+    if (slot.day !== lastDay) {
+      lastDay = slot.day;
+      const dayKey = slot.day.includes('Thursday') ? 'thu' : 'fri';
+      const sep = document.createElement('div');
+      sep.className = 'day-separator ' + dayKey;
+      sep.innerHTML = '<div class="sep-line"></div><div class="sep-label">' + slot.day + '</div><div class="sep-line"></div>';
+      grid.appendChild(sep);
+    }
+
+    const count = counts[slot.id] || 0;
+    const isFull = count >= slot.max;
+    const isSelected = selectedSlot === slot.id;
+    const pct = Math.round((count / slot.max) * 100);
+
+    const card = document.createElement('div');
+    // Determine color class from slot id
+    let colorClass = '';
+    if (slot.id.startsWith('thu-am')) colorClass = ' thu-am';
+    else if (slot.id.startsWith('thu-pm')) colorClass = ' thu-pm';
+    else if (slot.id.startsWith('fri-am')) colorClass = ' fri-am';
+    else if (slot.id.startsWith('fri-pm')) colorClass = ' fri-pm';
+    card.className = 'slot-card' + colorClass + (isFull ? ' full' : '') + (isSelected ? ' selected' : '');
+    card.innerHTML = `
+      <div class="checkmark"><svg viewBox="0 0 12 9"><polyline points="1,4 4.5,8 11,1"/></svg></div>
+      <div class="slot-day-label">${slot.day}</div>
+      <div class="slot-time">${slot.time}</div>
+      <div class="slot-note">${slot.note}</div>
+      <div class="progress-wrap"><div class="progress-bar${isFull?' full':''}" style="width:${pct}%"></div></div>
+      <div class="slot-count-row">
+        <span>${count} / ${slot.max} students</span>
+        ${isFull ? '<span class="badge-full">Full</span>' : '<span class="badge-open">Open</span>'}
+      </div>
+    `;
+    if (!isFull) card.onclick = () => selectSlot(slot.id);
+    grid.appendChild(card);
+  });
+}
+
+function selectSlot(slotId) {
+  selectedSlot = slotId;
+  renderSlots();
+  const slot = SLOTS.find(s => s.id === slotId);
+  document.getElementById('selected-info-display').textContent = '📅 ' + slot.day + ' · ' + slot.time + ' · ' + slot.note;
+  document.getElementById('booking-form').classList.remove('hidden');
+  document.getElementById('booking-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function validateEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+async function submitBooking() {
+  const group = document.getElementById('group-name').value.trim();
+  const email = document.getElementById('group-email').value.trim();
+  document.getElementById('err-group').textContent = '';
+  document.getElementById('err-email').textContent = '';
+
+  let valid = true;
+  if (!group) { document.getElementById('err-group').textContent = 'Please enter your full name.'; valid = false; }
+  if (!validateEmail(email)) { document.getElementById('err-email').textContent = 'Please enter a valid email address.'; valid = false; }
+  if (!selectedSlot || !valid) return;
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Confirming...';
+
+  try {
+    await loadCounts();
+    const slot = SLOTS.find(s => s.id === selectedSlot);
+    if (counts[selectedSlot] >= slot.max) {
+      alert('Sorry, this session has reached its capacity (8 students). Please choose another session.');
+      renderSlots();
+      document.getElementById('booking-form').classList.add('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Confirm my booking';
+      return;
+    }
+
+    await sbFetch('/rest/v1/bookings_microteaching', {
+      method: 'POST',
+      body: JSON.stringify({ slot_id: selectedSlot, group_name: group, email: email })
+    });
+
+    document.getElementById('success-msg').innerHTML =
+      '<strong>' + group + '</strong> is confirmed for <strong>' + slot.day + ', ' + slot.time + '</strong> (' + slot.note + ').<br>We look forward to seeing you at the workshop!';
+    document.getElementById('step-slots').classList.add('hidden');
+    document.getElementById('booking-form').classList.add('hidden');
+    document.getElementById('success-view').classList.remove('hidden');
+
+  } catch(e) {
+    alert('Something went wrong. Please try again.');
+    console.error(e);
+    btn.disabled = false;
+    btn.textContent = 'Confirm my booking';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
