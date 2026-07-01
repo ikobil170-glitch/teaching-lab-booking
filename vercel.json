@@ -2,19 +2,5 @@
   "buildCommand": "echo 'Static site - no build needed'",
   "outputDirectory": ".",
   "cleanUrls": true,
-  "trailingSlash": false,
-  "routes": [
-    {
-      "src": "/microteaching",
-      "dest": "/microteaching.html"
-    },
-    {
-      "src": "/microteaching.html",
-      "dest": "/microteaching.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+  "trailingSlash": false
 }
